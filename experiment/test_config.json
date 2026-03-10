@@ -4,27 +4,41 @@
     "run_evaluation": true
   },
   "data": {
-    "input_path": "example_data/geography/geography_5_csv_files_08051006_corpus_seeds.json",
+    "input_path": "example_data/Social_Network_Twitter/Cypher/Social_Network_Twitter_cypher.json",
     "output_path": "output/test_result.json"
   },
   "prediction": {
-    "api_key": "sk-xxxxxx",
-    "base_url": "https://dashscope...",
+    "api_key": "PLACEHOLDER_FOR_API_KEY",
+    "base_url": "PLACEHOLDER_FOR_BASE_URL",
     "model": "qwen-plus",
-    "schema_path": "example_data/geography/import_config.json",
+    "schema_path": "example_data/Social_Network_Twitter/Cypher/schema.txt",
+    "target_lang": "cypher",
+    "mode": "zeroshot",
+    "graph_name": "social_network_twitter",
     "max_workers": 5,
+    "temperature": 0.0,
     "level_fields": [
-      ["initial_nl", "initial_query"],
+      ["initial_question", "initial_query"],
       ["level_1", "level_1_query"],
       ["level_2", "level_2_query"],
       ["level_3", "level_3_query"],
-      ["level_4", "level_4_query"]
+      ["level3_with_ext", "level_3_external_knowledge_query"]
     ]
   },
   "evaluation": {
-    "db_uri": "bolt://localhost:7687",
-    "db_user": "admin",
-    "db_pass": "73@TuGraph",
-    "dbgpt_root": "tools/eval_similarity_grammar"
+    "tugraph": {
+      "db_uri": "bolt://localhost:7687",
+      "db_user": "admin",
+      "db_pass": "PLACEHOLDER_FOR_DB_PASS"
+    },
+    "dbgpt_root": "tools/eval_similarity_grammar",
+    "spanner": {
+      "project_id": "PLACEHOLDER_FOR_PROJECT_ID",
+      "instance_id": "PLACEHOLDER_FOR_INSTANCE_ID",
+      "database_id": "PLACEHOLDER_FOR_DATABASE_ID"
+    },
+    "sqlite": {
+      "db_path": "example_data/SQLite/disney.sqlite"
+    }
   }
 }

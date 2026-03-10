@@ -7,5 +7,5 @@ __pycache__/
 
 # Ignore output folder
 output/
-
+temp_eval_results_oop/
 evaluation_detail/

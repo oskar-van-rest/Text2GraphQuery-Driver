@@ -1,0 +1,91 @@
+Node properties:
+- **HASHTAG**
+  - `hashtag_id`: STRING (REQUIRED)
+  - `tag_text`: STRING (OPTIONAL)
+  - `first_used_at`: DATETIME (OPTIONAL)
+  - `usage_count`: INT32 (OPTIONAL)
+- **LIST**
+  - `list_id`: STRING (REQUIRED)
+  - `name`: STRING (OPTIONAL)
+  - `description`: STRING (OPTIONAL)
+  - `created_at`: DATETIME (OPTIONAL)
+  - `member_count`: INT32 (OPTIONAL)
+  - `subscriber_count`: INT32 (OPTIONAL)
+  - `is_private`: BOOL (OPTIONAL)
+- **LOCATION**
+  - `location_id`: STRING (REQUIRED)
+  - `name`: STRING (OPTIONAL)
+  - `country_code`: STRING (OPTIONAL)
+  - `woeid`: INT32 (OPTIONAL)
+- **MEDIA_ATTACHMENT**
+  - `media_id`: STRING (REQUIRED)
+  - `media_url`: STRING (OPTIONAL)
+  - `media_type`: STRING (OPTIONAL)
+  - `alt_text`: STRING (OPTIONAL)
+  - `uploaded_at`: DATETIME (OPTIONAL)
+- **TREND**
+  - `trend_id`: STRING (REQUIRED)
+  - `name`: STRING (OPTIONAL)
+  - `url`: STRING (OPTIONAL)
+  - `promoted_content`: BOOL (OPTIONAL)
+  - `query`: STRING (OPTIONAL)
+  - `tweet_volume`: INT64 (OPTIONAL)
+  - `location`: STRING (OPTIONAL)
+  - `updated_at`: DATETIME (OPTIONAL)
+- **TWEET**
+  - `tweet_id`: STRING (REQUIRED)
+  - `content`: STRING (OPTIONAL)
+  - `created_at`: DATETIME (OPTIONAL)
+  - `like_count`: INT32 (OPTIONAL)
+  - `retweet_count`: INT32 (OPTIONAL)
+  - `reply_count`: INT32 (OPTIONAL)
+  - `view_count`: INT64 (OPTIONAL)
+  - `language`: STRING (OPTIONAL)
+  - `is_sensitive`: BOOL (OPTIONAL)
+- **USER**
+  - `user_id`: STRING (REQUIRED)
+  - `username`: STRING (OPTIONAL)
+  - `display_name`: STRING (OPTIONAL)
+  - `bio`: STRING (OPTIONAL)
+  - `profile_image_url`: STRING (OPTIONAL)
+  - `created_at`: DATETIME (OPTIONAL)
+  - `followers_count`: INT32 (OPTIONAL)
+  - `following_count`: INT32 (OPTIONAL)
+  - `tweet_count`: INT32 (OPTIONAL)
+  - `verified_status`: BOOL (OPTIONAL)
+
+Relationship properties:
+- **ATTACHES_MEDIA**
+  - `attached_at`: DATETIME (REQUIRED)
+  - `position`: INT32 (OPTIONAL)
+- **BELONGS_TO_TREND**
+  - `rank_position`: INT32 (REQUIRED)
+  - `trend_score`: FLOAT (REQUIRED)
+- **CONTAINS_HASHTAG**
+  - `is_promoted`: BOOL (REQUIRED)
+  - `position_in_tweet`: INT32 (REQUIRED)
+- **ENGAGES_WITH**
+  - `engaged_at`: DATETIME (REQUIRED)
+  - `engagement_type`: STRING (REQUIRED)
+  - `is_organic`: BOOL (REQUIRED)
+- **FOLLOWS**
+  - `followed_at`: DATETIME (REQUIRED)
+  - `notification_preference`: STRING (OPTIONAL)
+- **MEMBER_OF_LIST**
+  - `added_at`: DATETIME (REQUIRED)
+- **ORIGINATES_FROM**
+  - `geo_tagged_at`: DATETIME (REQUIRED)
+- **POSTS**
+  - `device_type`: STRING (OPTIONAL)
+  - `location_coordinates`: STRING (OPTIONAL)
+  - `posted_at`: DATETIME (REQUIRED)
+
+The relationships:
+(:HASHTAG)-[:BELONGS_TO_TREND]->(:TREND)
+(:TWEET)-[:ATTACHES_MEDIA]->(:MEDIA_ATTACHMENT)
+(:TWEET)-[:CONTAINS_HASHTAG]->(:HASHTAG)
+(:TWEET)-[:ORIGINATES_FROM]->(:LOCATION)
+(:USER)-[:ENGAGES_WITH]->(:TWEET)
+(:USER)-[:FOLLOWS]->(:USER)
+(:USER)-[:MEMBER_OF_LIST]->(:LIST)
+(:USER)-[:POSTS]->(:TWEET)

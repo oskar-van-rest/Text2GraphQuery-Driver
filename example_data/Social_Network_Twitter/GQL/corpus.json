@@ -1,0 +1,122 @@
+[
+  {
+    "id": "at2gsynth_socialnetworktwitter_1",
+    "database": "Social_Network_Twitter",
+    "initial_question": "Identify users who have posted tweets containing hashtags that belong to trends with a tweet volume greater than 10000, and return their usernames along with the trend names.",
+    "gold_query": "MATCH (u:USER)-[:POSTS]->(t:TWEET)-[:CONTAINS_HASHTAG]->(h:HASHTAG)-[:BELONGS_TO_TREND]->(tr:TREND) WHERE tr.tweet_volume > 10000 RETURN DISTINCT u.username, tr.name",
+    "difficulty": "hard",
+    "source": "AT2G-Synth",
+    "level_1": "Find USER nodes connected via POSTS relationships to TWEET nodes, which are linked through CONTAINS_HASHTAG relationships to HASHTAG nodes, which in turn are connected by BELONGS_TO_TREND relationships to TREND nodes where the tweet_volume property exceeds 10000; return the username property of the USER and the name property of the TREND.",
+    "level_2": "Identify users and the trending topics they contributed to, where each trend has a tweet volume greater than 10,000.",
+    "level_3": "Discover high-engagement trends on social media by tracing user-generated tweets with specific hashtags to identify which popular trends attract substantial user participation.",
+    "external_knowledge": "A trend is considered high-engagement if it has a tweet volume greater than 10,000; user participation is identified through tweets containing hashtags linked to these trends."
+  },
+  {
+    "id": "at2gsynth_socialnetworktwitter_2",
+    "database": "Social_Network_Twitter",
+    "initial_question": "Identify the top 5 most engaged-with tweets (based on total engagements) posted by users who have more than 100 followers, including details about the tweet content, user display name, and engagement count.",
+    "gold_query": "MATCH (u:USER)-[:POSTS]->(t:TWEET)<-[e:ENGAGES_WITH]-(:USER) WHERE u.followers_count > 100 RETURN t, u, COUNT(e) AS engagement_count NEXT RETURN t.content, u.display_name, engagement_count ORDER BY engagement_count DESC LIMIT 5",
+    "difficulty": "hard",
+    "source": "AT2G-Synth",
+    "level_1": "Find USER nodes connected via POSTS relationships to TWEET nodes, where those TWEETS are engaged with by other USERs through ENGAGES_WITH relationships, and filter for users who have more than 100 followers; return the tweet, user, and count of engagements, then project the tweet content, user display name, and engagement count, sorted in descending order by engagement count and limited to the top 5 results.",
+    "level_2": "Retrieve the content of tweets posted by users with over 100 followers, along with the poster's display name and the number of engagements each tweet received, ranking them from highest to lowest engagement and showing only the top five.",
+    "level_3": "Identify high-engagement content within a social network by analyzing interactions on posts from moderately influential users, using engagement volume as a proxy for content resonance or virality.",
+    "external_knowledge": "Moderately influential users are defined as those with more than 100 followers. Engagement volume is measured by the count of user engagements (e.g., likes, shares) per tweet, and the top five most-engaged tweets are returned."
+  },
+  {
+    "id": "at2gsynth_socialnetworktwitter_3",
+    "database": "Social_Network_Twitter",
+    "initial_question": "Retrieve a list of users who have posted tweets containing media attachments and also belong to at least one list, showing their usernames, the number of lists they're part of, and the count of media attachments in their tweets.",
+    "gold_query": "MATCH (u:USER)-[:POSTS]->(t:TWEET)-[:ATTACHES_MEDIA]->(m:MEDIA_ATTACHMENT) RETURN u, COUNT(m) AS media_count NEXT MATCH (u)-[:MEMBER_OF_LIST]->(l:`LIST`) RETURN u, media_count, COUNT(l) AS list_count NEXT RETURN u.username, list_count, media_count",
+    "difficulty": "hard",
+    "source": "AT2G-Synth",
+    "level_1": "Find USER nodes connected via POSTS relationships to TWEET nodes that have ATTACHES_MEDIA relationships to MEDIA_ATTACHMENT nodes, count the number of media attachments per user, then find MEMBER_OF_LIST relationships from those users to LIST nodes, count the number of lists per user, and return each user's username along with their media attachment count and list membership count.",
+    "level_2": "For each user, determine how many media files they have attached to their tweets and how many curated lists they are members of, then display their username alongside these two counts.",
+    "level_3": "Analyze user engagement on a social platform by measuring both content richness (via media attachments in tweets) and community integration (via list memberships) to identify patterns of active or influential participation.",
+    "external_knowledge": "Content richness is measured by the count of media attachments in a user's tweets, and community integration is quantified by the number of curated lists the user is a member of."
+  },
+  {
+    "id": "at2gsynth_socialnetworktwitter_4",
+    "database": "Social_Network_Twitter",
+    "initial_question": "Retrieve the average number of likes per tweet for users who have posted more than 10 tweets and whose tweets include media attachments. Include only tweets that are not marked as sensitive.",
+    "gold_query": "MATCH (u:USER)-[:POSTS]->(t:TWEET)-[:ATTACHES_MEDIA]->(:MEDIA_ATTACHMENT) WHERE t.is_sensitive = false RETURN u, COUNT(t) AS tweet_count, AVG(t.like_count) AS avg_likes NEXT RETURN u.username, avg_likes",
+    "difficulty": "hard",
+    "source": "AT2G-Synth",
+    "level_1": "Find USER nodes connected via POSTS relationships to TWEET nodes that have ATTACHES_MEDIA relationships to MEDIA_ATTACHMENT nodes, where the TWEET property 'is_sensitive' is false, and return the user along with the count of such tweets and average like count, then project the username and average likes.",
+    "level_2": "Identify users who posted non-sensitive tweets with media attachments and calculate how many such tweets each user posted and their average number of likes, then display the username and average likes.",
+    "level_3": "Analyze user engagement patterns by measuring tweet volume and average popularity (via likes) among users who share media in non-sensitive public posts, to understand content-sharing behavior on the platform.",
+    "external_knowledge": "Non-sensitive tweets refer to those with 'is_sensitive = false'. Media attachments are explicitly linked via the :ATTACHES_MEDIA relationship, and average popularity is measured by AVG(t.like_count)."
+  },
+  {
+    "id": "at2gsynth_socialnetworktwitter_5",
+    "database": "Social_Network_Twitter",
+    "initial_question": "Find the top 3 trending hashtags that are associated with tweets having the highest combined retweet and like counts. Return the hashtag text and the total interaction count.",
+    "gold_query": "MATCH (h:HASHTAG)<-[:CONTAINS_HASHTAG]-(t:TWEET) RETURN h, SUM(t.retweet_count) AS total_interactions ORDER BY total_interactions DESC LIMIT 3 NEXT RETURN h.tag_text, total_interactions",
+    "difficulty": "medium",
+    "source": "AT2G-Synth",
+    "level_1": "Find HASHTAG nodes connected to TWEET nodes via CONTAINS_HASHTAG relationships, retrieve the hashtag node and sum the retweet_count property of the related tweets, order by the total in descending order, limit to the top 3, then return the tag_text and total interaction count.",
+    "level_2": "What are the top three hashtags by total retweet count across all associated tweets?",
+    "level_3": "Identify the most widely shared hashtags by aggregating engagement metrics from linked tweets to uncover patterns in content virality.",
+    "external_knowledge": "The top three hashtags are determined by summing the retweet_count of all tweets containing each hashtag, with the highest totals ranked first."
+  },
+  {
+    "id": "at2gsynth_socialnetworktwitter_6",
+    "database": "Social_Network_Twitter",
+    "initial_question": "Identify users who have engaged with tweets (liked, retweeted, or replied) more than 10 times and are also members of at least one list. Return their usernames and the number of engagements.",
+    "gold_query": "MATCH (u:USER)-[e:ENGAGES_WITH]->(t:TWEET) RETURN u, COUNT(e) AS engagement_count NEXT MATCH (u)-[:MEMBER_OF_LIST]->(l:`LIST`) RETURN u.username, engagement_count",
+    "difficulty": "hard",
+    "source": "AT2G-Synth",
+    "level_1": "Find USER nodes connected to TWEET nodes via ENGAGES_WITH relationships, count the number of these relationships per user, then for each such user, find connections to LIST nodes via MEMBER_OF_LIST relationships and return the user's username along with their engagement count.",
+    "level_2": "For users who engage with tweets, count how many engagements each user has and retrieve their username along with this count if they are members of any list.",
+    "level_3": "Identify active social media users by measuring their tweet engagement volume and filter for those participating in curated lists to assess influence or community involvement patterns.",
+    "external_knowledge": "Engagement count refers to the number of times a user engages with tweets; only users who are members of at least one curated list are included in the results."
+  },
+  {
+    "id": "at2gsynth_socialnetworktwitter_7",
+    "database": "Social_Network_Twitter",
+    "initial_question": "Retrieve the names of trends and their associated hashtags where the trend's tweet volume exceeds 10000, ordered by the trend score in descending order.",
+    "gold_query": "MATCH (h:HASHTAG)-[b:BELONGS_TO_TREND]->(t:TREND) WHERE t.tweet_volume > 10000 RETURN t.name, h.tag_text ORDER BY b.trend_score DESC LIMIT 10",
+    "difficulty": "medium",
+    "source": "AT2G-Synth",
+    "level_1": "Find HASHTAG nodes connected to TREND nodes via BELONGS_TO_TREND relationships where the TREND's tweet_volume property is greater than 10000, and return the TREND name and HASHTAG tag_text, ordered by the relationship's trend_score in descending order, limited to 10 results.",
+    "level_2": "Return the names of trends with more than 10,000 tweets and their associated hashtags, ranked by how strongly each hashtag is linked to the trend, showing only the top 10 highest-scoring combinations.",
+    "level_3": "Identify the most prominently associated hashtags within high-visibility trends to analyze which tags are driving engagement in viral topics.",
+    "external_knowledge": "High-visibility trends are defined as those with a tweet volume exceeding 10,000. Hashtag prominence is measured by trend_score, which ranks the strength of association between a hashtag and its trend."
+  },
+  {
+    "id": "at2gsynth_socialnetworktwitter_8",
+    "database": "Social_Network_Twitter",
+    "initial_question": "What are the top 5 most used hashtags in tweets posted by verified users?",
+    "gold_query": "MATCH (u:USER)-[:POSTS]->(t:TWEET)-[c:CONTAINS_HASHTAG]->(h:HASHTAG) WHERE u.verified_status = true RETURN h.tag_text, COUNT(c) AS usage_count ORDER BY usage_count DESC LIMIT 5",
+    "difficulty": "medium",
+    "source": "AT2G-Synth",
+    "level_1": "Find HASHTAG nodes connected to TWEET nodes through CONTAINS_HASHTAG relationships, where those TWEETs are posted by USER nodes with verified_status = true, and return the tag_text of each HASHTAG along with the count of CONTAINS_HASHTAG relationships, ordered in descending order and limited to the top 5.",
+    "level_2": "What are the five most frequently used hashtags in tweets posted by verified users?",
+    "level_3": "Identify trending hashtags within content generated by verified accounts to analyze patterns of influence and topic propagation in social media discourse.",
+    "external_knowledge": "The query identifies the top 5 most frequently used hashtags (by count) in tweets from verified users only, where 'verified' refers to users with verified_status = true."
+  },
+  {
+    "id": "at2gsynth_socialnetworktwitter_9",
+    "database": "Social_Network_Twitter",
+    "initial_question": "Retrieve the display names of users who have posted tweets that belong to trends with a tweet volume greater than 10000, along with the trend name and the tweet content.",
+    "gold_query": "MATCH (u:USER)-[:POSTS]->(t:TWEET)-[:CONTAINS_HASHTAG]->(h:HASHTAG)-[:BELONGS_TO_TREND]->(tr:TREND) WHERE tr.tweet_volume > 10000 RETURN u.display_name, tr.name, t.content",
+    "difficulty": "hard",
+    "source": "AT2G-Synth",
+    "level_1": "Find USER nodes connected via POSTS relationships to TWEET nodes, which are linked through CONTAINS_HASHTAG relationships to HASHTAG nodes, which in turn are connected by BELONGS_TO_TREND relationships to TREND nodes where the tweet_volume property exceeds 10000; return the display_name of the USER, the name of the TREND, and the content of the TWEET.",
+    "level_2": "Retrieve the names of users, their tweet contents, and the trending topics they participated in, where those trends had a tweet volume greater than 10,000.",
+    "level_3": "Identify user engagement with high-volume trending topics by analyzing tweets that contributed to popular hashtags, focusing on trends with significant public participation.",
+    "external_knowledge": "High-volume trending topics refer to trends with a tweet volume greater than 10,000. User engagement is measured through tweets containing hashtags linked to these high-volume trends."
+  },
+  {
+    "id": "at2gsynth_socialnetworktwitter_10",
+    "database": "Social_Network_Twitter",
+    "initial_question": "Identify trends that include hashtags used in tweets posted by verified users, showing the trend name, hashtag text, and the number of times the hashtag was used in such tweets.",
+    "gold_query": "MATCH (u:USER {verified_status: true})-[:POSTS]->(t:TWEET)-[:CONTAINS_HASHTAG]->(h:HASHTAG)-[:BELONGS_TO_TREND]->(tr:TREND) RETURN tr.name AS trend_name, h.tag_text AS hashtag_text, COUNT(t) AS usage_in_verified_tweets ORDER BY usage_in_verified_tweets DESC",
+    "difficulty": "hard",
+    "source": "AT2G-Synth",
+    "level_1": "Find USER nodes with verified_status set to true that are connected via POSTS relationships to TWEET nodes, which are linked through CONTAINS_HASHTAG relationships to HASHTAG nodes, which in turn are connected by BELONGS_TO_TREND relationships to TREND nodes; return the TREND name, HASHTAG tag_text, and the count of such TWEET nodes, ordered by the count in descending order.",
+    "level_2": "Identify trending topics and their associated hashtags that appear in tweets posted by verified users, and rank them by how frequently they occur in those tweets.",
+    "level_3": "Analyze the propagation of hashtags among verified users to uncover which trends are most prominently amplified by authoritative accounts on the platform.",
+    "external_knowledge": "Verified users are those with 'verified_status: true'. The analysis counts hashtag usage in tweets from these users and ranks trends by the total count of such tweets."
+  }
+]

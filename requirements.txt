@@ -1,13 +1,13 @@
-# 数据库连接 
+# Database connection 
 neo4j>=5.0.0
 
-# 大模型调用 
+# LLM (Large Language Model) calls 
 openai>=1.0.0
 
-# 进度条显示
+# Progress bar display
 tqdm
 
-# 评估指标 
+# Evaluation metrics 
 evaluate
 absl-py
 rouge_score

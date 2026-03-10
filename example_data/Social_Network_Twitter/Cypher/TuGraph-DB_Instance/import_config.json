@@ -1,0 +1,735 @@
+{
+  "schema": [
+    {
+      "type": "VERTEX",
+      "label": "USER",
+      "properties": [
+        {
+          "name": "user_id",
+          "type": "STRING",
+          "optional": false,
+          "unique": true,
+          "index": true
+        },
+        {
+          "name": "username",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "display_name",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "bio",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "profile_image_url",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "followers_count",
+          "type": "INT32",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "following_count",
+          "type": "INT32",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "tweet_count",
+          "type": "INT32",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "verified_status",
+          "type": "BOOL",
+          "optional": true,
+          "unique": false
+        }
+      ],
+      "primary": "user_id"
+    },
+    {
+      "type": "VERTEX",
+      "label": "TWEET",
+      "properties": [
+        {
+          "name": "tweet_id",
+          "type": "STRING",
+          "optional": false,
+          "unique": true,
+          "index": true
+        },
+        {
+          "name": "content",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "like_count",
+          "type": "INT32",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "retweet_count",
+          "type": "INT32",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "reply_count",
+          "type": "INT32",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "view_count",
+          "type": "INT64",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "language",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "is_sensitive",
+          "type": "BOOL",
+          "optional": true,
+          "unique": false
+        }
+      ],
+      "primary": "tweet_id"
+    },
+    {
+      "type": "VERTEX",
+      "label": "HASHTAG",
+      "properties": [
+        {
+          "name": "hashtag_id",
+          "type": "STRING",
+          "optional": false,
+          "unique": true,
+          "index": true
+        },
+        {
+          "name": "tag_text",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "first_used_at",
+          "type": "DATETIME",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "usage_count",
+          "type": "INT32",
+          "optional": true,
+          "unique": false
+        }
+      ],
+      "primary": "hashtag_id"
+    },
+    {
+      "type": "VERTEX",
+      "label": "TREND",
+      "properties": [
+        {
+          "name": "trend_id",
+          "type": "STRING",
+          "optional": false,
+          "unique": true,
+          "index": true
+        },
+        {
+          "name": "name",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "url",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "promoted_content",
+          "type": "BOOL",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "query",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "tweet_volume",
+          "type": "INT64",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "location",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "optional": true,
+          "unique": false
+        }
+      ],
+      "primary": "trend_id"
+    },
+    {
+      "type": "VERTEX",
+      "label": "LIST",
+      "properties": [
+        {
+          "name": "list_id",
+          "type": "STRING",
+          "optional": false,
+          "unique": true,
+          "index": true
+        },
+        {
+          "name": "name",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "description",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "member_count",
+          "type": "INT32",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "subscriber_count",
+          "type": "INT32",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "is_private",
+          "type": "BOOL",
+          "optional": true,
+          "unique": false
+        }
+      ],
+      "primary": "list_id"
+    },
+    {
+      "type": "VERTEX",
+      "label": "MEDIA_ATTACHMENT",
+      "properties": [
+        {
+          "name": "media_id",
+          "type": "STRING",
+          "optional": false,
+          "unique": true,
+          "index": true
+        },
+        {
+          "name": "media_url",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "media_type",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "alt_text",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "uploaded_at",
+          "type": "DATETIME",
+          "optional": true,
+          "unique": false
+        }
+      ],
+      "primary": "media_id"
+    },
+    {
+      "type": "VERTEX",
+      "label": "LOCATION",
+      "properties": [
+        {
+          "name": "location_id",
+          "type": "STRING",
+          "optional": false,
+          "unique": true,
+          "index": true
+        },
+        {
+          "name": "name",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "country_code",
+          "type": "STRING",
+          "optional": true,
+          "unique": false
+        },
+        {
+          "name": "woeid",
+          "type": "INT32",
+          "optional": true,
+          "unique": false
+        }
+      ],
+      "primary": "location_id"
+    },
+    {
+      "type": "EDGE",
+      "label": "POSTS",
+      "properties": [
+        {
+          "name": "posted_at",
+          "type": "DATETIME",
+          "optional": false
+        },
+        {
+          "name": "device_type",
+          "type": "STRING",
+          "optional": true
+        },
+        {
+          "name": "location_coordinates",
+          "type": "STRING",
+          "optional": true
+        }
+      ],
+      "constraints": [
+        [
+          "USER",
+          "TWEET"
+        ]
+      ]
+    },
+    {
+      "type": "EDGE",
+      "label": "FOLLOWS",
+      "properties": [
+        {
+          "name": "followed_at",
+          "type": "DATETIME",
+          "optional": false
+        },
+        {
+          "name": "notification_preference",
+          "type": "STRING",
+          "optional": true
+        }
+      ],
+      "constraints": [
+        [
+          "USER",
+          "USER"
+        ]
+      ]
+    },
+    {
+      "type": "EDGE",
+      "label": "ENGAGES_WITH",
+      "properties": [
+        {
+          "name": "engagement_type",
+          "type": "STRING",
+          "optional": false
+        },
+        {
+          "name": "engaged_at",
+          "type": "DATETIME",
+          "optional": false
+        },
+        {
+          "name": "is_organic",
+          "type": "BOOL",
+          "optional": false
+        }
+      ],
+      "constraints": [
+        [
+          "USER",
+          "TWEET"
+        ]
+      ]
+    },
+    {
+      "type": "EDGE",
+      "label": "CONTAINS_HASHTAG",
+      "properties": [
+        {
+          "name": "position_in_tweet",
+          "type": "INT32",
+          "optional": false
+        },
+        {
+          "name": "is_promoted",
+          "type": "BOOL",
+          "optional": false
+        }
+      ],
+      "constraints": [
+        [
+          "TWEET",
+          "HASHTAG"
+        ]
+      ]
+    },
+    {
+      "type": "EDGE",
+      "label": "BELONGS_TO_TREND",
+      "properties": [
+        {
+          "name": "trend_score",
+          "type": "FLOAT",
+          "optional": false
+        },
+        {
+          "name": "rank_position",
+          "type": "INT32",
+          "optional": false
+        }
+      ],
+      "constraints": [
+        [
+          "HASHTAG",
+          "TREND"
+        ]
+      ]
+    },
+    {
+      "type": "EDGE",
+      "label": "ATTACHES_MEDIA",
+      "properties": [
+        {
+          "name": "attached_at",
+          "type": "DATETIME",
+          "optional": false
+        },
+        {
+          "name": "position",
+          "type": "INT32",
+          "optional": true
+        }
+      ],
+      "constraints": [
+        [
+          "TWEET",
+          "MEDIA_ATTACHMENT"
+        ]
+      ]
+    },
+    {
+      "type": "EDGE",
+      "label": "ORIGINATES_FROM",
+      "properties": [
+        {
+          "name": "geo_tagged_at",
+          "type": "DATETIME",
+          "optional": false
+        }
+      ],
+      "constraints": [
+        [
+          "TWEET",
+          "LOCATION"
+        ]
+      ]
+    },
+    {
+      "type": "EDGE",
+      "label": "MEMBER_OF_LIST",
+      "properties": [
+        {
+          "name": "added_at",
+          "type": "DATETIME",
+          "optional": false
+        }
+      ],
+      "constraints": [
+        [
+          "USER",
+          "LIST"
+        ]
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "USER.csv",
+      "label": "USER",
+      "format": "CSV",
+      "header": 1,
+      "columns": [
+        "user_id",
+        "username",
+        "display_name",
+        "bio",
+        "profile_image_url",
+        "created_at",
+        "followers_count",
+        "following_count",
+        "tweet_count",
+        "verified_status"
+      ]
+    },
+    {
+      "path": "TWEET.csv",
+      "label": "TWEET",
+      "format": "CSV",
+      "header": 1,
+      "columns": [
+        "tweet_id",
+        "content",
+        "created_at",
+        "like_count",
+        "retweet_count",
+        "reply_count",
+        "view_count",
+        "language",
+        "is_sensitive"
+      ]
+    },
+    {
+      "path": "HASHTAG.csv",
+      "label": "HASHTAG",
+      "format": "CSV",
+      "header": 1,
+      "columns": [
+        "hashtag_id",
+        "tag_text",
+        "first_used_at",
+        "usage_count"
+      ]
+    },
+    {
+      "path": "TREND.csv",
+      "label": "TREND",
+      "format": "CSV",
+      "header": 1,
+      "columns": [
+        "trend_id",
+        "name",
+        "url",
+        "promoted_content",
+        "query",
+        "tweet_volume",
+        "location",
+        "updated_at"
+      ]
+    },
+    {
+      "path": "LIST.csv",
+      "label": "LIST",
+      "format": "CSV",
+      "header": 1,
+      "columns": [
+        "list_id",
+        "name",
+        "description",
+        "created_at",
+        "member_count",
+        "subscriber_count",
+        "is_private"
+      ]
+    },
+    {
+      "path": "MEDIA_ATTACHMENT.csv",
+      "label": "MEDIA_ATTACHMENT",
+      "format": "CSV",
+      "header": 1,
+      "columns": [
+        "media_id",
+        "media_url",
+        "media_type",
+        "alt_text",
+        "uploaded_at"
+      ]
+    },
+    {
+      "path": "LOCATION.csv",
+      "label": "LOCATION",
+      "format": "CSV",
+      "header": 1,
+      "columns": [
+        "location_id",
+        "name",
+        "country_code",
+        "woeid"
+      ]
+    },
+    {
+      "path": "POSTS.csv",
+      "label": "POSTS",
+      "format": "CSV",
+      "header": 1,
+      "SRC_ID": "USER",
+      "DST_ID": "TWEET",
+      "columns": [
+        "SRC_ID",
+        "DST_ID",
+        "posted_at",
+        "device_type",
+        "location_coordinates"
+      ]
+    },
+    {
+      "path": "FOLLOWS.csv",
+      "label": "FOLLOWS",
+      "format": "CSV",
+      "header": 1,
+      "SRC_ID": "USER",
+      "DST_ID": "USER",
+      "columns": [
+        "SRC_ID",
+        "DST_ID",
+        "followed_at",
+        "notification_preference"
+      ]
+    },
+    {
+      "path": "ENGAGES_WITH.csv",
+      "label": "ENGAGES_WITH",
+      "format": "CSV",
+      "header": 1,
+      "SRC_ID": "USER",
+      "DST_ID": "TWEET",
+      "columns": [
+        "SRC_ID",
+        "DST_ID",
+        "engagement_type",
+        "engaged_at",
+        "is_organic"
+      ]
+    },
+    {
+      "path": "CONTAINS_HASHTAG.csv",
+      "label": "CONTAINS_HASHTAG",
+      "format": "CSV",
+      "header": 1,
+      "SRC_ID": "TWEET",
+      "DST_ID": "HASHTAG",
+      "columns": [
+        "SRC_ID",
+        "DST_ID",
+        "position_in_tweet",
+        "is_promoted"
+      ]
+    },
+    {
+      "path": "BELONGS_TO_TREND.csv",
+      "label": "BELONGS_TO_TREND",
+      "format": "CSV",
+      "header": 1,
+      "SRC_ID": "HASHTAG",
+      "DST_ID": "TREND",
+      "columns": [
+        "SRC_ID",
+        "DST_ID",
+        "trend_score",
+        "rank_position"
+      ]
+    },
+    {
+      "path": "ATTACHES_MEDIA.csv",
+      "label": "ATTACHES_MEDIA",
+      "format": "CSV",
+      "header": 1,
+      "SRC_ID": "TWEET",
+      "DST_ID": "MEDIA_ATTACHMENT",
+      "columns": [
+        "SRC_ID",
+        "DST_ID",
+        "attached_at",
+        "position"
+      ]
+    },
+    {
+      "path": "ORIGINATES_FROM.csv",
+      "label": "ORIGINATES_FROM",
+      "format": "CSV",
+      "header": 1,
+      "SRC_ID": "TWEET",
+      "DST_ID": "LOCATION",
+      "columns": [
+        "SRC_ID",
+        "DST_ID",
+        "geo_tagged_at"
+      ]
+    },
+    {
+      "path": "MEMBER_OF_LIST.csv",
+      "label": "MEMBER_OF_LIST",
+      "format": "CSV",
+      "header": 1,
+      "SRC_ID": "USER",
+      "DST_ID": "LIST",
+      "columns": [
+        "SRC_ID",
+        "DST_ID",
+        "added_at"
+      ]
+    }
+  ]
+}

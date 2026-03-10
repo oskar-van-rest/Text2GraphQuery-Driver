@@ -1,0 +1,203 @@
+{
+  "files": [
+    {
+      "path": "USER.csv",
+      "label": "USER",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "user_id": "STRING",
+        "username": "STRING",
+        "display_name": "STRING",
+        "bio": "STRING",
+        "profile_image_url": "STRING",
+        "created_at": "STRING",
+        "followers_count": "INT64",
+        "following_count": "INT64",
+        "tweet_count": "INT64",
+        "verified_status": "BOOL"
+      }
+    },
+    {
+      "path": "TWEET.csv",
+      "label": "TWEET",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "tweet_id": "STRING",
+        "content": "STRING",
+        "created_at": "STRING",
+        "like_count": "INT64",
+        "retweet_count": "INT64",
+        "reply_count": "INT64",
+        "view_count": "INT64",
+        "language": "STRING",
+        "is_sensitive": "BOOL"
+      }
+    },
+    {
+      "path": "HASHTAG.csv",
+      "label": "HASHTAG",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "hashtag_id": "STRING",
+        "tag_text": "STRING",
+        "first_used_at": "STRING",
+        "usage_count": "INT64"
+      }
+    },
+    {
+      "path": "TREND.csv",
+      "label": "TREND",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "trend_id": "STRING",
+        "name": "STRING",
+        "url": "STRING",
+        "promoted_content": "BOOL",
+        "query": "STRING",
+        "tweet_volume": "INT64",
+        "location": "STRING",
+        "updated_at": "STRING"
+      }
+    },
+    {
+      "path": "LIST.csv",
+      "label": "LIST",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "list_id": "STRING",
+        "name": "STRING",
+        "description": "STRING",
+        "created_at": "STRING",
+        "member_count": "INT64",
+        "subscriber_count": "INT64",
+        "is_private": "BOOL"
+      }
+    },
+    {
+      "path": "MEDIA_ATTACHMENT.csv",
+      "label": "MEDIA_ATTACHMENT",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "media_id": "STRING",
+        "media_url": "STRING",
+        "media_type": "STRING",
+        "alt_text": "STRING",
+        "uploaded_at": "STRING"
+      }
+    },
+    {
+      "path": "LOCATION.csv",
+      "label": "LOCATION",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "location_id": "STRING",
+        "name": "STRING",
+        "country_code": "STRING",
+        "woeid": "INT64"
+      }
+    },
+    {
+      "path": "POSTS.csv",
+      "label": "USERPOSTSTWEET",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "SRC_ID": "STRING",
+        "DST_ID": "STRING",
+        "posted_at": "STRING",
+        "device_type": "STRING",
+        "location_coordinates": "STRING"
+      }
+    },
+    {
+      "path": "FOLLOWS.csv",
+      "label": "USERFOLLOWSUSER",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "SRC_ID": "STRING",
+        "DST_ID": "STRING",
+        "followed_at": "STRING",
+        "notification_preference": "STRING"
+      }
+    },
+    {
+      "path": "ENGAGES_WITH.csv",
+      "label": "USERENGAGES_WITHTWEET",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "SRC_ID": "STRING",
+        "DST_ID": "STRING",
+        "engagement_type": "STRING",
+        "engaged_at": "STRING",
+        "is_organic": "BOOL"
+      }
+    },
+    {
+      "path": "CONTAINS_HASHTAG.csv",
+      "label": "TWEETCONTAINS_HASHTAGHASHTAG",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "SRC_ID": "STRING",
+        "DST_ID": "STRING",
+        "position_in_tweet": "INT64",
+        "is_promoted": "BOOL"
+      }
+    },
+    {
+      "path": "BELONGS_TO_TREND.csv",
+      "label": "HASHTAGBELONGS_TO_TRENDTREND",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "SRC_ID": "STRING",
+        "DST_ID": "STRING",
+        "trend_score": "FLOAT64",
+        "rank_position": "INT64"
+      }
+    },
+    {
+      "path": "ATTACHES_MEDIA.csv",
+      "label": "TWEETATTACHES_MEDIAMEDIA_ATTACHMENT",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "SRC_ID": "STRING",
+        "DST_ID": "STRING",
+        "attached_at": "STRING",
+        "position": "INT64"
+      }
+    },
+    {
+      "path": "ORIGINATES_FROM.csv",
+      "label": "TWEETORIGINATES_FROMLOCATION",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "SRC_ID": "STRING",
+        "DST_ID": "STRING",
+        "geo_tagged_at": "STRING"
+      }
+    },
+    {
+      "path": "MEMBER_OF_LIST.csv",
+      "label": "USERMEMBER_OF_LISTLIST",
+      "format": "CSV",
+      "header": 1,
+      "columns": {
+        "SRC_ID": "STRING",
+        "DST_ID": "STRING",
+        "added_at": "STRING"
+      }
+    }
+  ]
+}
