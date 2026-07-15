@@ -4,3 +4,5 @@ neo4j>=5.0.0
 google-cloud-spanner
 evaluate
 prettytable
+jaro-winkler
+antlr4-python3-runtime
