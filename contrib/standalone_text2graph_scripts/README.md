@@ -75,6 +75,12 @@ values with paths from your own checkout or dataset:
 Both `--target` and `--prompt_style` are required. Choose `fewshot` to include
 the built-in examples or `zeroshot` to omit them.
 
+For this experiment, predict only the `initial_question` field. Always pass
+`--input_field initial_question` and make sure every input record contains a
+non-empty `initial_question`. Do not use `level_1`, `level_2`, `level_3`, or
+`level_3_plus_external_knowledge`; external knowledge is not part of this
+prediction setting.
+
 GQL example:
 
 ```bash
@@ -85,6 +91,7 @@ python contrib/standalone_text2graph_scripts/call_qwen_api_both_new.py \
   --graph_name my_graph \
   --model qwen3.7-max \
   --prompt_style fewshot \
+  --input_field initial_question \
   --output_file output/predictions.json
 ```
 
@@ -96,7 +103,8 @@ python contrib/standalone_text2graph_scripts/call_qwen_api_both_new.py \
   --corpus_path data/questions.json \
   --schema_file data/schema.txt \
   --model qwen3.7-max \
-  --prompt_style zeroshot
+  --prompt_style zeroshot \
+  --input_field initial_question
 ```
 
 SQL requires `--sqlite_db` instead of `--schema_file`:
@@ -107,7 +115,8 @@ python contrib/standalone_text2graph_scripts/call_qwen_api_both_new.py \
   --corpus_path data/questions.json \
   --sqlite_db data/database.sqlite \
   --model qwen3.7-max \
-  --prompt_style fewshot
+  --prompt_style fewshot \
+  --input_field initial_question
 ```
 
 Windows PowerShell uses the same arguments, for example:
@@ -120,18 +129,14 @@ python contrib\standalone_text2graph_scripts\call_qwen_api_both_new.py `
   --graph_name my_graph `
   --model qwen3.7-max `
   --prompt_style fewshot `
+  --input_field initial_question `
   --output_file output\predictions.json
 ```
 
 The input may be a JSON array or JSONL. Each record should contain `id` or
-`instance_id`, plus a question field. By default, the script checks
-`new_initial_question`, `initial_question`, `initial_nl`, `level_1`, `level_2`,
-`level_3`, and `question` in that order. Use `--input_field` to select another
-field explicitly. Supported experiment variants are `initial_question`,
-`level_1`, `level_2`, `level_3`, and
-`level_3_plus_external_knowledge`. The last variant uses the `level_3` question
-and injects `external_knowledge` (falling back to `evidence`); the other variants
-do not inject external knowledge. Generated queries are written to
+`instance_id` and a non-empty `initial_question`. The documented commands use
+`--input_field initial_question` so the model receives that question without
+injecting `external_knowledge`. Generated queries are written to
 `generated_query` while the original record fields are preserved.
 
 Run the following command from the repository root for all concurrency, retry,
