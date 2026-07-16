@@ -87,113 +87,105 @@ def build_prompt(
 
     # )
 
-    # cypher_system = (
-    #     "You are an expert in graph query languages, specifically openCypher.\n"
-    #     "Schema:\n"
-    #     f"{schema_text}\n\n"
-    #     "Domain knowledge:\n"
-    #     f"{specific_knowledge}\n\n"
-    #     f"{reverse_alias_instruction}"
-    #     "Task: Convert the user's natural language question into a openCypher query.\n"
-    #     "Output: Return only the query string."
-    # )
-
-    # gql_system = (
-    #     "You are an expert in graph query languages, specifically ISO GQL (ISO/IEC 39075).\n"
-    #     "Schema (DDL):\n"
-    #     f"{schema_text}\n\n"
-    #     "Domain knowledge:\n"
-    #     f"{specific_knowledge}\n\n"
-    #     f"{reverse_alias_instruction}"
-    #     "Task: Convert the user's natural language question into a ISO GQL query.\n"
-    #     "Output: Return only the query string."
-    # )
-
-    # sql_system = (
-    #     "You are an expert in relational query languages, specifically SQL.\n"
-    #     "Schema:\n"
-    #     f"{schema_text}\n\n"
-    #     "Domain knowledge:\n"
-    #     f"{specific_knowledge}\n\n"
-    #     f"{reverse_alias_instruction}"
-    #     "Task: Convert the user's natural language question into a SQL query.\n"
-    #     "Output: Return only the query string.\n"
-    # )
-
-
-    # --- Cypher (Neo4j) ---
     cypher_system = (
         "You are an expert in graph query languages, specifically openCypher.\n"
-        "The database schema is as follows:\n"
+        "Schema:\n"
         f"{schema_text}\n\n"
-        "Domain Knowledge:\n"
+        "Domain knowledge:\n"
         f"{specific_knowledge}\n\n"
+        f"{reverse_alias_instruction}"
         "Task: Convert the user's natural language question into a openCypher query.\n"
-        "Output: Return only the query string.\n\n"
-        "The user's question and corresponding output examples are as follows:\n\n"
-        "Example 1\n"
-        "Question: Which characters have a path to \"Catelyn-Stark\" in the interaction network with a maximum of 3 hops?\n"
-        "Output: MATCH (c:Character)-[:INTERACTS*1..3]->(target:Character {name: 'Catelyn-Stark'}) RETURN DISTINCT c.name\n\n"
-        "Example 2\n"
-        "Question: How many people have directed more than two movies?\n"
-        "Output: MATCH (p:Person)-[:DIRECTED]->(m:Movie) WITH p, count(m) AS moviesDirected WHERE moviesDirected > 2 RETURN count(p) AS directorsCount\n\n"
-        "Example 3\n"
-        "Question: List the top 5 movies with the most production companies involved.\n"
-        "Output: MATCH (m:Movie)-[:PRODUCED_BY]->(pc:ProductionCompany) WITH m, COUNT(pc) AS productionCompanyCount ORDER BY productionCompanyCount DESC LIMIT 5 RETURN m.title AS MovieTitle, productionCompanyCount\n"
+        "Output: Return only the query string."
     )
 
-# --- ISO GQL (Standard) ---
     gql_system = (
         "You are an expert in graph query languages, specifically ISO GQL (ISO/IEC 39075).\n"
-        "The database schema is as follows:\n"
+        "Schema (DDL):\n"
         f"{schema_text}\n\n"
-        "Domain Knowledge:\n"
+        "Domain knowledge:\n"
         f"{specific_knowledge}\n\n"
+        f"{reverse_alias_instruction}"
         "Task: Convert the user's natural language question into a ISO GQL query.\n"
-        "Output: Return only the query string.\n\n"
-        "The user's question and corresponding output examples are as follows:\n\n"
-        "Example 1\n"
-        "Question: Which characters have a path to \"Catelyn-Stark\" in the interaction network with a maximum of 3 hops?\n"
-        "Output: MATCH (c:Character)-[:INTERACTS]->{1,3}(target:Character {name: 'Catelyn-Stark'}) RETURN DISTINCT c.name\n\n"
-        "Example 2\n"
-        "Question: How many people have directed more than two movies?\n"
-        "Output: MATCH (p:Person)-[:DIRECTED]->(m:Movie) RETURN p, count(m) AS moviesDirected NEXT FILTER moviesDirected > 2 RETURN count(p) AS directorsCount\n\n"
-        "Example 3\n"
-        "Question: List the top 5 movies with the most production companies involved.\n"
-        "Output: MATCH (m:Movie)-[:PRODUCED_BY]->(pc:ProductionCompany) RETURN m, COUNT(pc) AS productionCompanyCount ORDER BY productionCompanyCount DESC LIMIT 5 NEXT RETURN m.title AS MovieTitle, productionCompanyCount\n"
-
+        "Output: Return only the query string."
     )
 
     sql_system = (
         "You are an expert in relational query languages, specifically SQL.\n"
-        "The database schema is as follows:\n"
+        "Schema:\n"
         f"{schema_text}\n\n"
-        "Domain Knowledge:\n"
+        "Domain knowledge:\n"
         f"{specific_knowledge}\n\n"
+        f"{reverse_alias_instruction}"
         "Task: Convert the user's natural language question into a SQL query.\n"
-        "Output: Return only the query string.\n\n"
-        "The user's question and corresponding output examples are as follows:\n\n"
-        "Example 1\n"
-        "Question: Please list the Asian populations of all the residential areas with the bad alias \"URB San Joaquin\".\n"
-        "Output: SELECT SUM(T1.asian_population) FROM zip_data AS T1 INNER JOIN avoid AS T2 ON T1.zip_code = T2.zip_code WHERE T2.bad_alias = 'URB San Joaquin'\n\n"
-        "Example 2\n"
-        "Question: What is the country and state of the city named Dalton?\n"
-        "Output: SELECT T2.county FROM state AS T1 INNER JOIN country AS T2 ON T1.abbreviation = T2.state INNER JOIN zip_data AS T3 ON T2.zip_code = T3.zip_code WHERE T3.city = 'Dalton' GROUP BY T2.county\n\n"
-        "Example 3\n"
-        "Question: How many cities does congressman Pierluisi Pedro represent?\n"
-        "Output: SELECT COUNT(DISTINCT T1.city) FROM zip_data AS T1 INNER JOIN zip_congress AS T2 ON T1.zip_code = T2.zip_code INNER JOIN congress AS T3 ON T2.district = T3.cognress_rep_id WHERE T3.first_name = 'Pierluisi' AND T3.last_name = 'Pedro'\n"
+        "Output: Return only the query string.\n"
     )
+
+    if prompt_style == "fewshot":
+        cypher_system = (
+            "You are an expert in graph query languages, specifically openCypher.\n"
+            "The database schema is as follows:\n"
+            f"{schema_text}\n\n"
+            "Domain Knowledge:\n"
+            f"{specific_knowledge}\n\n"
+            "Task: Convert the user's natural language question into a openCypher query.\n"
+            "Output: Return only the query string.\n\n"
+            "The user's question and corresponding output examples are as follows:\n\n"
+            "Example 1\n"
+            "Question: Which characters have a path to \"Catelyn-Stark\" in the interaction network with a maximum of 3 hops?\n"
+            "Output: MATCH (c:Character)-[:INTERACTS*1..3]->(target:Character {name: 'Catelyn-Stark'}) RETURN DISTINCT c.name\n\n"
+            "Example 2\n"
+            "Question: How many people have directed more than two movies?\n"
+            "Output: MATCH (p:Person)-[:DIRECTED]->(m:Movie) WITH p, count(m) AS moviesDirected WHERE moviesDirected > 2 RETURN count(p) AS directorsCount\n\n"
+            "Example 3\n"
+            "Question: List the top 5 movies with the most production companies involved.\n"
+            "Output: MATCH (m:Movie)-[:PRODUCED_BY]->(pc:ProductionCompany) WITH m, COUNT(pc) AS productionCompanyCount ORDER BY productionCompanyCount DESC LIMIT 5 RETURN m.title AS MovieTitle, productionCompanyCount\n"
+        )
+
+        gql_system = (
+            "You are an expert in graph query languages, specifically ISO GQL (ISO/IEC 39075).\n"
+            "The database schema is as follows:\n"
+            f"{schema_text}\n\n"
+            "Domain Knowledge:\n"
+            f"{specific_knowledge}\n\n"
+            "Task: Convert the user's natural language question into a ISO GQL query.\n"
+            "Output: Return only the query string.\n\n"
+            "The user's question and corresponding output examples are as follows:\n\n"
+            "Example 1\n"
+            "Question: Which characters have a path to \"Catelyn-Stark\" in the interaction network with a maximum of 3 hops?\n"
+            "Output: MATCH (c:Character)-[:INTERACTS]->{1,3}(target:Character {name: 'Catelyn-Stark'}) RETURN DISTINCT c.name\n\n"
+            "Example 2\n"
+            "Question: How many people have directed more than two movies?\n"
+            "Output: MATCH (p:Person)-[:DIRECTED]->(m:Movie) RETURN p, count(m) AS moviesDirected NEXT FILTER moviesDirected > 2 RETURN count(p) AS directorsCount\n\n"
+            "Example 3\n"
+            "Question: List the top 5 movies with the most production companies involved.\n"
+            "Output: MATCH (m:Movie)-[:PRODUCED_BY]->(pc:ProductionCompany) RETURN m, COUNT(pc) AS productionCompanyCount ORDER BY productionCompanyCount DESC LIMIT 5 NEXT RETURN m.title AS MovieTitle, productionCompanyCount\n"
+        )
+
+        sql_system = (
+            "You are an expert in relational query languages, specifically SQL.\n"
+            "The database schema is as follows:\n"
+            f"{schema_text}\n\n"
+            "Domain Knowledge:\n"
+            f"{specific_knowledge}\n\n"
+            "Task: Convert the user's natural language question into a SQL query.\n"
+            "Output: Return only the query string.\n\n"
+            "The user's question and corresponding output examples are as follows:\n\n"
+            "Example 1\n"
+            "Question: Please list the Asian populations of all the residential areas with the bad alias \"URB San Joaquin\".\n"
+            "Output: SELECT SUM(T1.asian_population) FROM zip_data AS T1 INNER JOIN avoid AS T2 ON T1.zip_code = T2.zip_code WHERE T2.bad_alias = 'URB San Joaquin'\n\n"
+            "Example 2\n"
+            "Question: What is the country and state of the city named Dalton?\n"
+            "Output: SELECT T2.county FROM state AS T1 INNER JOIN country AS T2 ON T1.abbreviation = T2.state INNER JOIN zip_data AS T3 ON T2.zip_code = T3.zip_code WHERE T3.city = 'Dalton' GROUP BY T2.county\n\n"
+            "Example 3\n"
+            "Question: How many cities does congressman Pierluisi Pedro represent?\n"
+            "Output: SELECT COUNT(DISTINCT T1.city) FROM zip_data AS T1 INNER JOIN zip_congress AS T2 ON T1.zip_code = T2.zip_code INNER JOIN congress AS T3 ON T2.district = T3.cognress_rep_id WHERE T3.first_name = 'Pierluisi' AND T3.last_name = 'Pedro'\n"
+        )
 
     system_content = (
         gql_system if target_lang.lower() == "gql"
         else cypher_system if target_lang.lower() == "cypher"
         else sql_system
     )
-
-    if prompt_style == "zeroshot":
-        system_content = system_content.split(
-            "\nThe user's question and corresponding output examples are as follows:", 1
-        )[0].rstrip()
 
     # print(system_content)
 
