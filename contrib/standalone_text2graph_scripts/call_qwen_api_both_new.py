@@ -234,10 +234,10 @@ def strip_markdown_fences(text: str) -> str:
         return text
     text = re.sub(r"(?is)<think>.*?</think>", "", text).strip()
     text = re.sub(r"(?is)^<think>.*", "", text).strip()
-    # 鍘绘帀甯歌 code fence
+    # Remove a leading and trailing Markdown code fence.
     text = re.sub(r"^```(?:cypher|gql|sql|iso-gql)?\s*", "", text.strip(), flags=re.IGNORECASE)
     text = re.sub(r"\s*```$", "", text.strip())
-    # 鍐嶆竻涓€娆′腑闂村浣?fence锛堜繚闄╋級
+    # Remove any remaining fence markers defensively.
     text = text.replace("```", "").strip()
     return text
 
@@ -248,7 +248,7 @@ def ensure_graph_clause_for_gql(query: str, graph_name: str) -> str:
         return q
     if re.match(r"(?i)^\s*GRAPH\s+\S+", q):
         return q
-    # 濡傛灉妯″瀷蹇樹簡鍐?GRAPH锛屽氨鑷姩琛ヤ笂锛堟洿瀹规槗鈥滆兘璺戔€濓級
+    # Prefix GRAPH when the model omitted it.
     return f"GRAPH {graph_name}\n{q}"
 
 
@@ -270,8 +270,8 @@ def call_single_instance(
     prompt_style="fewshot",
     extra_body=None,
 ):
+    # Avoid calling .strip() on a missing question.
     if not question or not str(question).strip():
-    # 闃叉 question=None 瀵艰嚧 .strip() 宕?    if not question or not str(question).strip():
         return {
             "idx": idx,
             "instance_id": instance_id,
@@ -365,7 +365,7 @@ def call_single_instance(
                     "elapsed_seconds": round(time.time() - start_time, 3),
                 }
 
-            # 鎸囨暟閫€閬?+ 鎶栧姩
+            # Exponential backoff with jitter.
             sleep_s = min(8.0, (2 ** (attempt - 1)) * 1.0) + random.uniform(0, 0.3)
             time.sleep(sleep_s)
 
