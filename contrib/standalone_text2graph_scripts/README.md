@@ -39,6 +39,12 @@ python -m pip install -r contrib\standalone_text2graph_scripts\requirements.txt
 
 ## Prediction
 
+The prediction script is located at:
+
+```text
+contrib/standalone_text2graph_scripts/call_qwen_api_both_new.py
+```
+
 Set the API key in an environment variable. Do not put it in the script or
 commit it to a configuration file.
 
@@ -57,6 +63,18 @@ $env:LLM_API_KEY="your-api-key"
 The default endpoint is the DashScope OpenAI-compatible endpoint. A different
 provider can be selected with `LLM_BASE_URL` or `--base_url`.
 
+You do not need to edit paths inside the Python file. Replace these command-line
+values with paths from your own checkout or dataset:
+
+- `--corpus_path`: input JSON or JSONL containing the questions.
+- `--schema_file`: graph schema used for GQL or Cypher generation.
+- `--sqlite_db`: SQLite database used for SQL generation.
+- `--output_file`: destination JSON; omit it to write beside the input file.
+- `--graph_name`: graph name inserted into generated GQL queries.
+
+Both `--target` and `--prompt_style` are required. Choose `fewshot` to include
+the built-in examples or `zeroshot` to omit them.
+
 GQL example:
 
 ```bash
@@ -65,7 +83,7 @@ python contrib/standalone_text2graph_scripts/call_qwen_api_both_new.py \
   --corpus_path data/questions.json \
   --schema_file data/schema.txt \
   --graph_name my_graph \
-  --model qwen-plus \
+  --model qwen3.7-max \
   --prompt_style fewshot \
   --output_file output/predictions.json
 ```
@@ -77,7 +95,7 @@ python contrib/standalone_text2graph_scripts/call_qwen_api_both_new.py \
   --target cypher \
   --corpus_path data/questions.json \
   --schema_file data/schema.txt \
-  --model qwen-plus \
+  --model qwen3.7-max \
   --prompt_style zeroshot
 ```
 
@@ -88,18 +106,40 @@ python contrib/standalone_text2graph_scripts/call_qwen_api_both_new.py \
   --target sql \
   --corpus_path data/questions.json \
   --sqlite_db data/database.sqlite \
-  --model qwen-plus
+  --model qwen3.7-max \
+  --prompt_style fewshot
+```
+
+Windows PowerShell uses the same arguments, for example:
+
+```powershell
+python contrib\standalone_text2graph_scripts\call_qwen_api_both_new.py `
+  --target gql `
+  --corpus_path data\questions.json `
+  --schema_file data\schema.txt `
+  --graph_name my_graph `
+  --model qwen3.7-max `
+  --prompt_style fewshot `
+  --output_file output\predictions.json
 ```
 
 The input may be a JSON array or JSONL. Each record should contain `id` or
 `instance_id`, plus a question field. By default, the script checks
 `new_initial_question`, `initial_question`, `initial_nl`, `level_1`, `level_2`,
 `level_3`, and `question` in that order. Use `--input_field` to select another
-field explicitly. Generated queries are written to `generated_query` while the
-original record fields are preserved.
+field explicitly. Supported experiment variants are `initial_question`,
+`level_1`, `level_2`, `level_3`, and
+`level_3_plus_external_knowledge`. The last variant uses the `level_3` question
+and injects `external_knowledge` (falling back to `evidence`); the other variants
+do not inject external knowledge. Generated queries are written to
+`generated_query` while the original record fields are preserved.
 
-Run `python call_qwen_api_both_new.py --help` for all concurrency, retry, token, and
-provider options.
+Run the following command from the repository root for all concurrency, retry,
+token, and provider options:
+
+```bash
+python contrib/standalone_text2graph_scripts/call_qwen_api_both_new.py --help
+```
 
 ## Reference: GQL execution accuracy
 

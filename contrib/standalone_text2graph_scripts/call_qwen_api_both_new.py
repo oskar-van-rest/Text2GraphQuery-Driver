@@ -187,6 +187,11 @@ def build_prompt(
         else sql_system
     )
 
+    if prompt_style == "zeroshot":
+        system_content = system_content.split(
+            "\nThe user's question and corresponding output examples are as follows:", 1
+        )[0].rstrip()
+
     # print(system_content)
 
     return [
@@ -429,7 +434,7 @@ if __name__ == "__main__":
                         help="Target language: cypher, gql, or sql")
 
 
-    # gql 蹇呭锛歡raph 鍚嶇О
+    # GQL requires a graph name.
     parser.add_argument("--graph_name", type=str, default=None,
                         help="Spanner Graph name (required when --target gql), used as: GRAPH <graph_name>")
 
@@ -442,8 +447,12 @@ if __name__ == "__main__":
     parser.add_argument("--max_retries", type=int, default=3, help="Retry times per item")
     parser.add_argument("--temperature", type=float, default=0.0, help="Sampling temperature")
     parser.add_argument("--max_tokens", type=int, default=512, help="Maximum generated tokens per request")
-    parser.add_argument("--prompt_style", choices=["zeroshot", "fewshot"], default="fewshot",
-                        help="Prompt style: omit examples for zeroshot, include examples for fewshot")
+    parser.add_argument(
+        "--prompt_style",
+        choices=["zeroshot", "fewshot"],
+        required=True,
+        help="Required: omit examples for zeroshot or include examples for fewshot.",
+    )
 
     parser.add_argument("--corpus_path", type=str, required=True,
                         help="Path to the input corpus JSON or JSONL file.")
@@ -452,7 +461,11 @@ if __name__ == "__main__":
     parser.add_argument("--sqlite_db", type=str, default=None,
                         help="Path to SQLite DB file; required for SQL.")
     parser.add_argument("--input_field", type=str, default=None,
-                        help="Preferred input field name for the natural-language question, e.g. new_initial_question.")
+                        help=(
+                            "Question variant: initial_question, level_1, level_2, level_3, "
+                            "or level_3_plus_external_knowledge. Only the last variant injects "
+                            "external knowledge and uses level_3 as its question."
+                        ))
     parser.add_argument("--limit", type=int, default=None,
                         help="Only process the first N input items. Useful for quick tests.")
     parser.add_argument("--base_url", type=str, default=None,
@@ -463,7 +476,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
 
-    # ===== use fixed values (overridable via CLI/env for other providers) =====
+    # Resolve credentials and provider configuration at runtime.
     api_key = args.api_key or os.environ.get("LLM_API_KEY")
 
     # base_url resolution:
@@ -492,8 +505,8 @@ if __name__ == "__main__":
     elif "generativelanguage" in _bu_l:
         extra_body = {"reasoning_effort": "none"}
     elif "deepseek" in _bu_l or "moonshot" in _bu_l or "kimi.ai" in _bu_l:
-        # DeepSeek V4 (deepseek-v4-pro/flash) 涓?Moonshot Kimi (kimi-k2.6/k2.5)
-        # 閮界敤 OpenAI-compat 鐨?extra_body={"thinking": {"type": "disabled"}} 鍏虫€濊€冿紝
+        # DeepSeek V4 and Moonshot Kimi use the OpenAI-compatible switch below
+        # to disable thinking and avoid spending the output budget on reasoning.
         extra_body = {"thinking": {"type": "disabled"}}
     elif _is_openai_reasoning:
         extra_body = {"reasoning_effort": "none"}
@@ -564,8 +577,13 @@ if __name__ == "__main__":
     for item in input_items:
         i_id = item.get("instance_id") or item.get("id")
         question = None
-        if args.input_field:
-            question = item.get(args.input_field)
+        use_external_knowledge = (
+            args.input_field == "level_3_plus_external_knowledge"
+        )
+        question_field = "level_3" if use_external_knowledge else args.input_field
+
+        if question_field:
+            question = item.get(question_field)
         if not question:
             question = (
                 item.get("new_initial_question")
@@ -577,12 +595,16 @@ if __name__ == "__main__":
                 or item.get("question")
             )
 
-        # 鉁?SQL(BIRD) 鐢?evidence锛涘浘鏁版嵁鐢?external_knowledge
-        specific_know = (
-            item.get("evidence", "")
-            or item.get("external_knowledge", "")
-            or ""
-        )
+        # Experimental design:
+        #   initial_question / level_1 / level_2 / level_3 -> no knowledge
+        #   level_3_plus_external_knowledge -> level_3 question + knowledge
+        specific_know = ""
+        if use_external_knowledge:
+            specific_know = (
+                item.get("external_knowledge", "")
+                or item.get("evidence", "")
+                or ""
+            )
 
         instances.append({
             "instance_id": i_id,
@@ -629,7 +651,7 @@ if __name__ == "__main__":
     for inst, gen in zip(instances, results):
         raw = dict(inst.get("_raw") or {})
 
-        # 淇濊瘉杈撳嚭瀛楁瀛樺湪
+        # Preserve the original record and add generation metadata.
         raw["external_knowledge"] = raw.get("external_knowledge", "") or ""
         raw["target_lang"] = args.target
         raw["generated_query"] = gen.get("generated_query")
