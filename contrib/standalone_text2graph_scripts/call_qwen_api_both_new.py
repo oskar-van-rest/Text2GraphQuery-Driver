@@ -8,13 +8,23 @@ import re
 from openai import OpenAI
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import sqlite3
 
 # Default OpenAI-compatible endpoint for Qwen. Override with --base_url or LLM_BASE_URL.
 DEFAULT_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 
+def extract_oracle_property_graph_ddl(schema_text: str) -> str | None:
+    """Return the Oracle logical graph DDL, excluding physical table DDL."""
+    match = re.search(
+        r"(?is)\bCREATE\s+(?:OR\s+REPLACE\s+)?PROPERTY\s+GRAPH\b.*?;",
+        schema_text,
+    )
+    return match.group(0).strip() if match else None
+
+
 def sqlite_schema_to_text(db_path: str) -> str:
+    import sqlite3
+
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
@@ -63,7 +73,7 @@ def schema_to_text(schema_json):
         lines.extend(edges)
     return "\n".join(lines)
 
-# === 2) Prompt builder (Cypher / Spanner Graph GQL) ===
+# === 2) Prompt builder (Cypher / Spanner Graph GQL / Oracle SQL/PGQ / SQL) ===
 def build_prompt(
     nl_question: str,
     specific_knowledge: str,
@@ -117,6 +127,18 @@ def build_prompt(
         f"{specific_knowledge}\n\n"
         f"{reverse_alias_instruction}"
         "Task: Convert the user's natural language question into a SQL query.\n"
+        "Output: Return only the query string.\n"
+    )
+
+    sql_pgq_system = (
+        "You are an expert in graph query languages, specifically SQL/PGQ.\n"
+        "Schema (DDL):\n"
+        f"{schema_text}\n\n"
+        f"Property graph name: {graph_name}\n\n"
+        "Domain knowledge:\n"
+        f"{specific_knowledge}\n\n"
+        f"{reverse_alias_instruction}"
+        "Task: Convert the user's natural language question into a SQL/PGQ query.\n"
         "Output: Return only the query string.\n"
     )
 
@@ -181,9 +203,53 @@ def build_prompt(
             "Output: SELECT COUNT(DISTINCT T1.city) FROM zip_data AS T1 INNER JOIN zip_congress AS T2 ON T1.zip_code = T2.zip_code INNER JOIN congress AS T3 ON T2.district = T3.cognress_rep_id WHERE T3.first_name = 'Pierluisi' AND T3.last_name = 'Pedro'\n"
         )
 
+        sql_pgq_system = (
+            "You are an expert in graph query languages, specifically Oracle SQL/PGQ.\n"
+            "The database schema is as follows:\n"
+            f"{schema_text}\n\n"
+            f"Property graph name: {graph_name}\n\n"
+            "Domain Knowledge:\n"
+            f"{specific_knowledge}\n\n"
+            "Task: Convert the user's natural language question into an Oracle SQL/PGQ query using GRAPH_TABLE.\n"
+            "Output: Return only the query string.\n\n"
+            "The user's question and corresponding output examples are as follows:\n\n"
+            "Example 1\n"
+            "Question: Which characters have a path to \"Catelyn-Stark\" in the interaction network with a maximum of 3 hops?\n"
+            "Output: SELECT DISTINCT *\n"
+            "FROM GRAPH_TABLE (\n"
+            f"  \"{graph_name}\" MATCH (c IS \"Character\")-[e1 IS \"INTERACTS\"]->{{1,3}}(target IS \"Character\") WHERE target.\"name\" = 'Catelyn-Stark' COLUMNS (c.\"name\" AS name)\n"
+            ") gt\n\n"
+            "Example 2\n"
+            "Question: How many people have directed more than two movies?\n"
+            "Output: WITH stage_1 AS (\n"
+            "  SELECT p_VALUE, COUNT(m_VALUE) AS moviesDirected\n"
+            "  FROM GRAPH_TABLE (\n"
+            f"    \"{graph_name}\" MATCH (p IS \"Person\")-[e1 IS \"DIRECTED\"]->(m IS \"Movie\") COLUMNS (VERTEX_ID(p) AS p_VALUE, VERTEX_ID(m) AS m_VALUE)\n"
+            "  ) gt\n"
+            "  GROUP BY p_VALUE\n"
+            ")\n"
+            "SELECT COUNT(p_VALUE) AS directorsCount\n"
+            "FROM stage_1\n"
+            "WHERE moviesDirected > 2\n\n"
+            "Example 3\n"
+            "Question: List the top 5 movies with the most production companies involved.\n"
+            "Output: WITH stage_1 AS (\n"
+            "  SELECT m_VALUE, COUNT(pc_VALUE) AS productionCompanyCount, m_title\n"
+            "  FROM GRAPH_TABLE (\n"
+            f"    \"{graph_name}\" MATCH (m IS \"Movie\")-[e1 IS \"PRODUCED_BY\"]->(pc IS \"ProductionCompany\") COLUMNS (VERTEX_ID(m) AS m_VALUE, VERTEX_ID(pc) AS pc_VALUE, m.\"title\" AS m_title)\n"
+            "  ) gt\n"
+            "  GROUP BY m_VALUE, m_title\n"
+            "  ORDER BY productionCompanyCount DESC\n"
+            "  FETCH FIRST 5 ROWS ONLY\n"
+            ")\n"
+            "SELECT m_title AS MovieTitle, productionCompanyCount AS productionCompanyCount\n"
+            "FROM stage_1\n"
+        )
+
     system_content = (
         gql_system if target_lang.lower() == "gql"
         else cypher_system if target_lang.lower() == "cypher"
+        else sql_pgq_system if target_lang.lower() == "sql_pgq"
         else sql_system
     )
 
@@ -214,7 +280,7 @@ def infer_prompt_style(
     graph_name: str | None = None,
     prompt_style: str = "fewshot",
 ) -> str:
-    supported_targets = {"cypher", "gql", "sql"}
+    supported_targets = {"cypher", "gql", "sql_pgq", "sql"}
     if (target_lang or "").lower() not in supported_targets:
         return "unknown-shot"
 
@@ -235,7 +301,12 @@ def strip_markdown_fences(text: str) -> str:
     text = re.sub(r"(?is)<think>.*?</think>", "", text).strip()
     text = re.sub(r"(?is)^<think>.*", "", text).strip()
     # Remove a leading and trailing Markdown code fence.
-    text = re.sub(r"^```(?:cypher|gql|sql|iso-gql)?\s*", "", text.strip(), flags=re.IGNORECASE)
+    text = re.sub(
+        r"^```(?:cypher|gql|sql(?:[_/-]?pgq)?|iso-gql)?\s*",
+        "",
+        text.strip(),
+        flags=re.IGNORECASE,
+    )
     text = re.sub(r"\s*```$", "", text.strip())
     # Remove any remaining fence markers defensively.
     text = text.replace("```", "").strip()
@@ -428,15 +499,22 @@ def call_qwen_api_parallel(
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Text-to-Cypher / Text-to-Spanner-GQL Generator")
+    parser = argparse.ArgumentParser(
+        description="Text-to-Cypher / Text-to-Spanner-GQL / Text-to-Oracle-SQL-PGQ Generator"
+    )
 
-    parser.add_argument("--target", type=str, choices=["cypher", "gql", "sql"], required=True,
-                        help="Target language: cypher, gql, or sql")
+    parser.add_argument(
+        "--target",
+        type=str,
+        choices=["cypher", "gql", "sql_pgq", "sql"],
+        required=True,
+        help="Target language: cypher, gql, sql_pgq, or sql",
+    )
 
 
-    # GQL requires a graph name.
+    # GQL and SQL/PGQ require a graph name.
     parser.add_argument("--graph_name", type=str, default=None,
-                        help="Spanner Graph name (required when --target gql), used as: GRAPH <graph_name>")
+                        help="Graph name (required when --target gql or sql_pgq)")
 
     parser.add_argument("--output_file", type=str, default=None,
                         help="Output JSON path. If None, auto-generated near input file.")
@@ -457,7 +535,7 @@ if __name__ == "__main__":
     parser.add_argument("--corpus_path", type=str, required=True,
                         help="Path to the input corpus JSON or JSONL file.")
     parser.add_argument("--schema_file", type=str, default=None,
-                        help="Path to graph schema file (.json/.txt/.sql); required for Cypher and GQL.")
+                        help="Path to graph schema file (.json/.txt/.sql); required for Cypher, GQL, and SQL/PGQ.")
     parser.add_argument("--sqlite_db", type=str, default=None,
                         help="Path to SQLite DB file; required for SQL.")
     parser.add_argument("--input_field", type=str, default=None,
@@ -526,12 +604,12 @@ if __name__ == "__main__":
     if args.target.lower() == "sql" and not sqlite_db:
         raise ValueError("--sqlite_db is required when --target sql")
     if args.target.lower() != "sql" and not schema_file:
-        raise ValueError("--schema_file is required for Cypher and GQL")
+        raise ValueError("--schema_file is required for Cypher, GQL, and SQL/PGQ")
 
-    # gql needs graph_name
-    if args.target.lower() == "gql":
+    # GQL and SQL/PGQ need a graph name.
+    if args.target.lower() in {"gql", "sql_pgq"}:
         if not args.graph_name or not args.graph_name.strip():
-            raise ValueError("--graph_name is required when --target gql")
+            raise ValueError("--graph_name is required when --target gql or sql_pgq")
         graph_name = args.graph_name.strip()
     else:
         graph_name = args.graph_name.strip() if args.graph_name else "UNUSED"
@@ -549,6 +627,20 @@ if __name__ == "__main__":
         else:
             with open(schema_file, "r", encoding="utf-8") as f:
                 schema_text = f.read()
+
+        # SQL/PGQ queries address the property graph, not its backing tables.
+        # When supplied with an Oracle DDL script, keep only the logical
+        # CREATE PROPERTY GRAPH statement in the model prompt.
+        if args.target.lower() == "sql_pgq":
+            property_graph_ddl = extract_oracle_property_graph_ddl(schema_text)
+            if property_graph_ddl:
+                schema_text = property_graph_ddl
+                print("[SQL_PGQ] Using CREATE PROPERTY GRAPH DDL only (backing tables omitted).")
+            elif re.search(r"(?is)\bCREATE\s+TABLE\b", schema_text):
+                raise ValueError(
+                    "SQL/PGQ schema DDL contains CREATE TABLE statements but no "
+                    "CREATE PROPERTY GRAPH statement."
+                )
 
 
     # load questions (JSON array; also supports JSONL fallback)
@@ -615,7 +707,7 @@ if __name__ == "__main__":
 
 
     print(f"Ready: {len(instances)} items | target={args.target.upper()}"
-          + (f" | GRAPH {graph_name}" if args.target.lower() == "gql" else ""))
+          + (f" | GRAPH {graph_name}" if args.target.lower() in {"gql", "sql_pgq"} else ""))
 
     results = call_qwen_api_parallel(
         instances=instances,

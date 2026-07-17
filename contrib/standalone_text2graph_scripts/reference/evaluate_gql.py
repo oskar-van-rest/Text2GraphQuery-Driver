@@ -21,6 +21,7 @@ LANG_IMPL_MAP = {
     "cypher": "tugraph-db",
     "gql": "iso-gql",
     "sql": "sqlite",
+    "sql_pgq": None,
 }
 SUPPORTED_FENCE_LANGS = tuple(LANG_IMPL_MAP)
 
@@ -137,6 +138,28 @@ def run_google_bleu(predictions: Path, gold: Path) -> None:
     print(f"Google BLEU results:\n{result}")
 
 
+def run_oracle_grammar(args: argparse.Namespace) -> None:
+    """Delegate SQL/PGQ grammar validation to the Oracle-backed evaluator."""
+    script = Path(__file__).with_name("ea_oracle_sql_pgq.py")
+    command = [
+        sys.executable,
+        str(script),
+        "--input-path",
+        args.json_file,
+        "--metrics",
+        "grammar",
+        "--user",
+        args.oracle_user,
+        "--dsn",
+        args.oracle_dsn,
+        "--password-env",
+        args.oracle_password_env,
+    ]
+    if args.oracle_password_prompt:
+        command.append("--password-prompt")
+    subprocess.run(command, check=True)
+
+
 def parse_args() -> argparse.Namespace:
     script_dir = Path(__file__).resolve().parent
     repository_root = script_dir.parents[2]
@@ -152,6 +175,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--language", choices=LANG_IMPL_MAP, default="gql")
     parser.add_argument("--prediction-key", default=None)
     parser.add_argument("--gold-key", default=None)
+    parser.add_argument("--oracle-user", default=os.environ.get("ORACLE_USER"))
+    parser.add_argument("--oracle-dsn", default=os.environ.get("ORACLE_DSN"))
+    parser.add_argument("--oracle-password-env", default="ORACLE_PASSWORD")
+    parser.add_argument("--oracle-password-prompt", action="store_true")
     parser.add_argument(
         "--evaluator-root",
         default=str(default_evaluator_root),
@@ -178,14 +205,25 @@ def main() -> None:
         f"Evaluating {len(examples)} examples as {args.language.upper()} "
         f"(prediction={prediction_key}, gold={gold_key})"
     )
-    for metric in ("grammar", "similarity"):
+    if args.language == "sql_pgq":
+        if not args.oracle_user:
+            raise ValueError("--oracle-user or ORACLE_USER is required for SQL/PGQ grammar")
+        if not args.oracle_dsn:
+            raise ValueError("--oracle-dsn or ORACLE_DSN is required for SQL/PGQ grammar")
+        print("\n=== Evaluating Oracle SQL/PGQ grammar ===")
+        run_oracle_grammar(args)
+        metrics = ("similarity",)
+    else:
+        metrics = ("grammar", "similarity")
+
+    for metric in metrics:
         print(f"\n=== Evaluating {metric} ===")
         run_external_metric(
             Path(args.evaluator_root).resolve(),
             predictions,
             gold,
             metric,
-            LANG_IMPL_MAP[args.language],
+            LANG_IMPL_MAP[args.language] or "iso-gql",
         )
 
     print("\n=== Evaluating google-bleu ===")

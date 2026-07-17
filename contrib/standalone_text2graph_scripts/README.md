@@ -75,6 +75,11 @@ values with paths from your own checkout or dataset:
 Both `--target` and `--prompt_style` are required. Choose `fewshot` to include
 the built-in examples or `zeroshot` to omit them.
 
+For `--target sql_pgq`, an Oracle DDL schema file that includes backing-table
+definitions is reduced to its `CREATE PROPERTY GRAPH` statement before it is
+sent to the model. This keeps the prompt focused on graph labels, properties,
+and edge directions.
+
 For this experiment, predict only the `initial_question` field. Always pass
 `--input_field initial_question` and make sure every input record contains a
 non-empty `initial_question`. Do not use `level_1`, `level_2`, `level_3`, or
@@ -203,6 +208,40 @@ It infers `generated_query` as the prediction and prefers `gql` as the gold
 field. Use `--prediction-key` and `--gold-key` when the input uses different
 names. Grammar and similarity depend on the vendored evaluator and its parser
 dependencies; Google BLEU uses the Hugging Face `evaluate` package.
+
+## Reference: Oracle SQL/PGQ grammar and execution accuracy
+
+`ea_oracle_sql_pgq.py` validates generated SQL/PGQ using Oracle's own
+`DBMS_SQL.PARSE` and compares the result sets of generated and gold read-only
+queries. Install the standalone requirements and pass credentials only through
+the environment or an interactive prompt:
+
+```bash
+python -m pip install -r contrib/standalone_text2graph_scripts/requirements.txt
+export ORACLE_USER=<oracle_user>
+read -rsp 'Oracle password: ' ORACLE_PASSWORD; echo
+export ORACLE_PASSWORD
+export ORACLE_DSN=<oracle_dsn_or_net_service_name>
+
+python contrib/standalone_text2graph_scripts/reference/ea_oracle_sql_pgq.py \
+  --input-path output/predictions.json
+```
+
+Set `ORACLE_DSN` to the connection string or Oracle Net service name appropriate
+for your environment. If your connection requires Oracle Thick mode, pass
+`--thick-mode on` and, if necessary, `--oracle-client-lib-dir`.
+
+Execution accepts only `SELECT` or `WITH` statements. Gold queries that fail
+are reported and excluded from the execution-accuracy denominator; grammar
+accuracy uses every generated query. To run Oracle grammar together with the
+existing similarity and Google BLEU wrapper:
+
+```bash
+python contrib/standalone_text2graph_scripts/reference/evaluate_gql.py \
+  --json-file output/predictions.json \
+  --language sql_pgq \
+  --oracle-user "$ORACLE_USER"
+```
 
 ## Security notes
 
