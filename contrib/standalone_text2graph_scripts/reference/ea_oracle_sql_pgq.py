@@ -29,11 +29,21 @@ except ImportError as exc:  # pragma: no cover - exercised at runtime
 
 
 DEFAULT_DSN = None
-IGNORED_GRAMMAR_ERROR_CODES = ("ORA-40983", "ORA-40954")
+IGNORED_GRAMMAR_ERROR_CODES = (
+    "ORA-40983",
+    "ORA-40954",
+    "ORA-00904",
+    "ORA-40996",
+    "ORA-49044",
+    "ORA-00942",
+    "ORA-40981",
+    "ORA-40990",
+    "ORA-49011",
+)
 
 
 def is_ignored_grammar_error(error: Exception) -> bool:
-    """Return whether Oracle rejected only an unresolved graph name."""
+    """Return whether Oracle failed only object-resolution or semantic checks."""
     message = str(error)
     return any(code in message for code in IGNORED_GRAMMAR_ERROR_CODES)
 
