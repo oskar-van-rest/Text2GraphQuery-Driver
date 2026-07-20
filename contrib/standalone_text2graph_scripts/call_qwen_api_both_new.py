@@ -212,13 +212,13 @@ def build_prompt(
         )
 
         sql_pgq_system = (
-            "You are an expert in graph query languages, specifically Oracle SQL/PGQ.\n"
+            "You are an expert in graph query languages, specifically ISO SQL/PGQ (ISO/IEC 9075-16).\n"
             "The database schema is as follows:\n"
             f"{schema_text}\n\n"
             f"Property graph name: {graph_name}\n\n"
             "Domain Knowledge:\n"
             f"{specific_knowledge}\n\n"
-            "Task: Convert the user's natural language question into an Oracle SQL/PGQ query using GRAPH_TABLE.\n"
+            "Task: Convert the user's natural language question into an ISO SQL/PGQ query.\n"
             "Output: Return only the query string.\n\n"
             "The user's question and corresponding output examples are as follows:\n\n"
             "Example 1\n"
