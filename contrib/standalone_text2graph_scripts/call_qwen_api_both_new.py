@@ -13,13 +13,21 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 DEFAULT_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 
-def extract_oracle_property_graph_ddl(schema_text: str) -> str | None:
-    """Return the Oracle logical graph DDL, excluding physical table DDL."""
-    match = re.search(
-        r"(?is)\bCREATE\s+(?:OR\s+REPLACE\s+)?PROPERTY\s+GRAPH\b.*?;",
-        schema_text,
+def resolve_sql_pgq_schema_file(schema_file: str) -> str:
+    """Return the SQL/PGQ schema text file paired with an Oracle CPG DDL file."""
+    if not schema_file.lower().endswith(".sql"):
+        return schema_file
+
+    schema_file = os.path.abspath(schema_file)
+    schema_dir = os.path.dirname(os.path.dirname(schema_file))
+    schema_txt = os.path.join(schema_dir, "schema.txt")
+    if os.path.isfile(schema_txt):
+        return schema_txt
+
+    raise ValueError(
+        "SQL/PGQ requires its SQL_PGQ/schema.txt. "
+        f"Could not find it beside Oracle DDL: {schema_file}"
     )
-    return match.group(0).strip() if match else None
 
 
 def sqlite_schema_to_text(db_path: str) -> str:
@@ -535,7 +543,10 @@ if __name__ == "__main__":
     parser.add_argument("--corpus_path", type=str, required=True,
                         help="Path to the input corpus JSON or JSONL file.")
     parser.add_argument("--schema_file", type=str, default=None,
-                        help="Path to graph schema file (.json/.txt/.sql); required for Cypher, GQL, and SQL/PGQ.")
+                        help=(
+                            "Path to graph schema file (.json/.txt); required for Cypher, GQL, and SQL/PGQ. "
+                            "For SQL/PGQ, pass SQL_PGQ/schema.txt; an Oracle CPG .sql path is resolved to that file."
+                        ))
     parser.add_argument("--sqlite_db", type=str, default=None,
                         help="Path to SQLite DB file; required for SQL.")
     parser.add_argument("--input_field", type=str, default=None,
@@ -605,6 +616,8 @@ if __name__ == "__main__":
         raise ValueError("--sqlite_db is required when --target sql")
     if args.target.lower() != "sql" and not schema_file:
         raise ValueError("--schema_file is required for Cypher, GQL, and SQL/PGQ")
+    if args.target.lower() == "sql_pgq":
+        schema_file = resolve_sql_pgq_schema_file(schema_file)
 
     # GQL and SQL/PGQ need a graph name.
     if args.target.lower() in {"gql", "sql_pgq"}:
@@ -627,21 +640,6 @@ if __name__ == "__main__":
         else:
             with open(schema_file, "r", encoding="utf-8") as f:
                 schema_text = f.read()
-
-        # SQL/PGQ queries address the property graph, not its backing tables.
-        # When supplied with an Oracle DDL script, keep only the logical
-        # CREATE PROPERTY GRAPH statement in the model prompt.
-        if args.target.lower() == "sql_pgq":
-            property_graph_ddl = extract_oracle_property_graph_ddl(schema_text)
-            if property_graph_ddl:
-                schema_text = property_graph_ddl
-                print("[SQL_PGQ] Using CREATE PROPERTY GRAPH DDL only (backing tables omitted).")
-            elif re.search(r"(?is)\bCREATE\s+TABLE\b", schema_text):
-                raise ValueError(
-                    "SQL/PGQ schema DDL contains CREATE TABLE statements but no "
-                    "CREATE PROPERTY GRAPH statement."
-                )
-
 
     # load questions (JSON array; also supports JSONL fallback)
     print(f"Loading Questions from: {input_file}")
